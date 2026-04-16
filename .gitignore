@@ -1,0 +1,13 @@
+app/
+env/
+logs/
+cache/
+.clinerules
+.cursorrules
+.windsurfrules
+.geminiignore
+AGENTS.md
+CLAUDE.md
+ENVIRONMENT
+GEMINI.md
+QWEN.md

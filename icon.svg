@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#f4f1eb"/>
+  <text x="256" y="312"
+        font-family="'Instrument Serif', 'Cormorant Garamond', 'Times New Roman', serif"
+        font-size="220"
+        text-anchor="middle"
+        fill="#3a3a38">Re<tspan font-style="italic" fill="#e85d2a">Clip</tspan></text>
+</svg>

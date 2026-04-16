@@ -1,0 +1,6 @@
+{
+  "version": "5.0",
+  "title": "ReClip",
+  "description": "Self-hosted, open-source video and audio downloader with a clean web UI. Supports YouTube, TikTok, Instagram, X, and 1000+ other sites via yt-dlp.",
+  "icon": "icon.svg"
+}
