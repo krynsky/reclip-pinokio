@@ -5,6 +5,11 @@ module.exports = {
   icon: "icon.svg",
   menu: async (kernel, info) => {
     let installed = info.exists("app/env")
+    let cookies = {
+      icon: "fa-solid fa-cookie-bite",
+      text: info.exists("cookies.txt") ? "Update YouTube Cookies" : "Add YouTube Cookies",
+      href: "cookies.js",
+    }
     let running = {
       install: info.running("install.js"),
       start: info.running("start.js"),
@@ -31,14 +36,14 @@ module.exports = {
             icon: 'fa-solid fa-terminal',
             text: "Terminal",
             href: "start.js",
-          }]
+          }, cookies]
         } else {
           return [{
             default: true,
             icon: 'fa-solid fa-terminal',
             text: "Terminal",
             href: "start.js",
-          }]
+          }, cookies]
         }
       } else if (running.update) {
         return [{
@@ -60,7 +65,7 @@ module.exports = {
           icon: "fa-solid fa-power-off",
           text: "Start",
           href: "start.js",
-        }, {
+        }, cookies, {
           icon: "fa-solid fa-plug",
           text: "Update",
           href: "update.js",

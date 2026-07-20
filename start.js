@@ -11,7 +11,7 @@ module.exports = {
         },
         path: "app",
         message: [
-          "python app.py"
+          "python ../server.py"
         ],
         on: [{
           event: "/(http:\\/\\/[0-9.:]+)/",
