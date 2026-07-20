@@ -7,6 +7,7 @@
 - Downloads videos and audio from 1000+ sites (YouTube, TikTok, Instagram, X, etc.)
 - Choose MP4 video or MP3 audio, pick quality/resolution
 - Batch download multiple URLs at once
+- Live per-video progress bar while downloading (added by this launcher)
 - Lightweight Flask backend + vanilla JS frontend
 
 ## How to use
