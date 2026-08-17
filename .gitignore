@@ -1,5 +1,6 @@
 app/
 env/
+cookies.txt
 logs/
 cache/
 .clinerules

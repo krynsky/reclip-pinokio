@@ -7,6 +7,7 @@
 - Downloads videos and audio from 1000+ sites (YouTube, TikTok, Instagram, X, etc.)
 - Choose MP4 video or MP3 audio, pick quality/resolution
 - Batch download multiple URLs at once
+- Live per-video progress bar while downloading (added by this launcher)
 - Lightweight Flask backend + vanilla JS frontend
 
 ## How to use
@@ -18,83 +19,121 @@
 
 Use **Update** to pull the latest ReClip sources and **Reset** to wipe the install.
 
+## Fixing YouTube cookie errors ("Sign in to confirm you're not a bot")
+
+YouTube sometimes blocks anonymous downloads and yt-dlp fails with an error like
+`Sign in to confirm you're not a bot` or asks for cookies. This launcher can pass
+your browser's YouTube cookies to yt-dlp:
+
+1. In your browser (logged in to YouTube), export cookies with an extension such as
+   **Get cookies.txt LOCALLY** (Chrome/Edge) or **cookies.txt** (Firefox). Export in
+   **Netscape format** for `youtube.com`.
+2. In the launcher sidebar, click **Add YouTube Cookies** and select the exported file.
+3. Retry the download — cookies apply immediately, even while the app is running.
+   No restart needed.
+
+To refresh expired cookies, just click **Update YouTube Cookies** and pick a newer
+export. The file is stored as `cookies.txt` in the launcher folder (git-ignored, never
+committed) and is only ever passed to your local yt-dlp process.
+
 ## API
 
 ReClip exposes a small Flask API. The base URL is whatever **Open Web UI** shows (e.g. `http://127.0.0.1:PORT`). Replace `BASE` below with that URL.
 
-### Fetch metadata for URLs
+### Fetch video metadata — `POST /api/info`
+
+Body: `{"url": "..."}`. Returns `title`, `thumbnail`, `duration`, `uploader`, and `formats` (one best format per resolution, each with `id`, `label`, `height`).
 
 **curl**
 
 ```bash
-curl -X POST "$BASE/fetch" \
+curl -X POST "$BASE/api/info" \
   -H "Content-Type: application/json" \
-  -d '{"urls": ["https://www.youtube.com/watch?v=dQw4w9WgXcQ"], "mode": "mp4"}'
+  -d '{"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}'
 ```
 
 **JavaScript**
 
 ```js
-const res = await fetch(`${BASE}/fetch`, {
+const res = await fetch(`${BASE}/api/info`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    urls: ["https://www.youtube.com/watch?v=dQw4w9WgXcQ"],
-    mode: "mp4"
-  })
+  body: JSON.stringify({ url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" })
 });
-const data = await res.json();
+const info = await res.json();
 ```
 
 **Python**
 
 ```python
 import requests
-r = requests.post(f"{BASE}/fetch", json={
-    "urls": ["https://www.youtube.com/watch?v=dQw4w9WgXcQ"],
-    "mode": "mp4"
-})
-print(r.json())
+info = requests.post(f"{BASE}/api/info", json={
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+}).json()
 ```
 
-### Download a video/audio
+### Expand a playlist — `POST /api/playlist`
+
+Body: `{"url": "..."}`. Returns `{"urls": [...]}` with the individual video URLs.
+
+### Download — `POST /api/download`, then poll
+
+Downloads are asynchronous: start a job, poll its status, then fetch the file.
+
+Body: `{"url": "...", "format": "video" | "audio", "format_id": "<optional id from /api/info>", "title": "<optional, used for the filename>"}`. Returns `{"job_id": "..."}`.
+
+- `GET /api/status/<job_id>` → `{"status": "downloading" | "done" | "error", "error": ..., "filename": ...}`
+- `GET /api/file/<job_id>` → the finished MP4/MP3 file (once status is `done`)
 
 **curl**
 
 ```bash
-curl -X POST "$BASE/download" \
+JOB=$(curl -s -X POST "$BASE/api/download" \
   -H "Content-Type: application/json" \
-  -d '{"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "mode": "mp4", "quality": "720"}' \
-  -OJ
+  -d '{"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "format": "video"}' | jq -r .job_id)
+curl "$BASE/api/status/$JOB"          # repeat until status is "done"
+curl -OJ "$BASE/api/file/$JOB"
 ```
 
 **JavaScript**
 
 ```js
-const res = await fetch(`${BASE}/download`, {
+const { job_id } = await (await fetch(`${BASE}/api/download`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    mode: "mp4",
-    quality: "720"
-  })
-});
-const blob = await res.blob();
+  body: JSON.stringify({ url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", format: "video" })
+})).json();
+
+let status;
+do {
+  await new Promise(r => setTimeout(r, 2000));
+  status = await (await fetch(`${BASE}/api/status/${job_id}`)).json();
+} while (status.status === "downloading");
+
+if (status.status === "done") {
+  const blob = await (await fetch(`${BASE}/api/file/${job_id}`)).blob();
+}
 ```
 
 **Python**
 
 ```python
-import requests
-r = requests.post(f"{BASE}/download", json={
+import time, requests
+
+job = requests.post(f"{BASE}/api/download", json={
     "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    "mode": "mp4",
-    "quality": "720"
-}, stream=True)
-with open("out.mp4", "wb") as f:
-    for chunk in r.iter_content(1 << 14):
-        f.write(chunk)
-```
+    "format": "video"
+}).json()["job_id"]
 
-> Exact endpoint names/params may evolve upstream — check `app/app.py` in the installed app folder for the canonical route definitions.
+while True:
+    status = requests.get(f"{BASE}/api/status/{job}").json()
+    if status["status"] != "downloading":
+        break
+    time.sleep(2)
+
+if status["status"] == "done":
+    r = requests.get(f"{BASE}/api/file/{job}", stream=True)
+    with open(status["filename"], "wb") as f:
+        for chunk in r.iter_content(1 << 14):
+            f.write(chunk)
+```
