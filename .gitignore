@@ -1,6 +1,7 @@
 app/
 env/
 cookies.txt
+config.json
 logs/
 cache/
 .clinerules
