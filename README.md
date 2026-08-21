@@ -44,6 +44,15 @@ $env:COOKIES_FROM_BROWSER = "chrome"
 Set it in the same shell/session you launch Pinokio from, then Start (or restart)
 the app.
 
+> **Known issue on Windows with Chrome:** recent Chrome versions (127+) use
+> "App-Bound Encryption" for cookie storage, and yt-dlp can fail to decrypt
+> them with `Failed to decrypt with DPAPI` even with the browser fully closed
+> and yt-dlp up to date — see [yt-dlp#10927](https://github.com/yt-dlp/yt-dlp/issues/10927).
+> This is an unresolved upstream yt-dlp/Chrome compatibility issue, not
+> something this launcher can work around. If you hit it, use Option B below,
+> or try `firefox` or `edge` for `COOKIES_FROM_BROWSER` if you have one of
+> those installed instead.
+
 ### Option B: export a cookies.txt file
 
 1. In your browser (logged in to YouTube), export cookies with an extension such as
