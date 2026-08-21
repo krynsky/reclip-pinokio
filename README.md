@@ -27,22 +27,15 @@ YouTube cookies to yt-dlp two ways:
 
 ### Option A: read cookies straight from your browser (recommended)
 
-Set the `COOKIES_FROM_BROWSER` environment variable before starting the launcher,
-to a value yt-dlp's `--cookies-from-browser` accepts — e.g. `chrome`, `edge`,
-`firefox`, `brave`, or `chrome:Profile 2` to pick a specific profile. yt-dlp reads
-the cookie store directly on each call; no `cookies.txt` file is ever written to
-disk, and no browser extension is needed.
+In the launcher sidebar, click **Set Cookie Browser** and enter a value yt-dlp's
+`--cookies-from-browser` accepts — e.g. `chrome`, `edge`, `firefox`, `brave`, or
+`chrome:Profile 2` to pick a specific profile. Then **Start** (or restart) the
+app. yt-dlp reads the cookie store directly on each call; no `cookies.txt` file
+is ever written to disk, and no browser extension is needed.
 
-```bash
-# macOS/Linux
-export COOKIES_FROM_BROWSER=chrome
-
-# Windows (PowerShell)
-$env:COOKIES_FROM_BROWSER = "chrome"
-```
-
-Set it in the same shell/session you launch Pinokio from, then Start (or restart)
-the app.
+The button label shows the currently configured browser (or "Set Cookie Browser"
+if none is set). Click it again any time to change it, or clear the field and
+save to disable — a restart is needed either way for the change to take effect.
 
 > **Known issue on Windows with Chrome:** recent Chrome versions (127+) use
 > "App-Bound Encryption" for cookie storage, and yt-dlp can fail to decrypt
