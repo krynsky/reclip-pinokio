@@ -1,3 +1,6 @@
+// File-based cookie import (Option B in README). If you're on Windows with
+// Chrome and COOKIES_FROM_BROWSER fails with a DPAPI decrypt error
+// (see README / yt-dlp#10927), use this menu item instead.
 module.exports = {
   run: [
     {
