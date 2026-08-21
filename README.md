@@ -23,7 +23,28 @@ Use **Update** to pull the latest ReClip sources and **Reset** to wipe the insta
 
 YouTube sometimes blocks anonymous downloads and yt-dlp fails with an error like
 `Sign in to confirm you're not a bot` or asks for cookies. This launcher can pass
-your browser's YouTube cookies to yt-dlp:
+YouTube cookies to yt-dlp two ways:
+
+### Option A: read cookies straight from your browser (recommended)
+
+Set the `COOKIES_FROM_BROWSER` environment variable before starting the launcher,
+to a value yt-dlp's `--cookies-from-browser` accepts — e.g. `chrome`, `edge`,
+`firefox`, `brave`, or `chrome:Profile 2` to pick a specific profile. yt-dlp reads
+the cookie store directly on each call; no `cookies.txt` file is ever written to
+disk, and no browser extension is needed.
+
+```bash
+# macOS/Linux
+export COOKIES_FROM_BROWSER=chrome
+
+# Windows (PowerShell)
+$env:COOKIES_FROM_BROWSER = "chrome"
+```
+
+Set it in the same shell/session you launch Pinokio from, then Start (or restart)
+the app.
+
+### Option B: export a cookies.txt file
 
 1. In your browser (logged in to YouTube), export cookies with an extension such as
    **Get cookies.txt LOCALLY** (Chrome/Edge) or **cookies.txt** (Firefox). Export in
@@ -35,6 +56,9 @@ your browser's YouTube cookies to yt-dlp:
 To refresh expired cookies, just click **Update YouTube Cookies** and pick a newer
 export. The file is stored as `cookies.txt` in the launcher folder (git-ignored, never
 committed) and is only ever passed to your local yt-dlp process.
+
+If `COOKIES_FROM_BROWSER` is set, it takes priority over `cookies.txt` on every
+yt-dlp call.
 
 ## API
 

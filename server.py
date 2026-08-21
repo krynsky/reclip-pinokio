@@ -4,9 +4,16 @@ Runs the untouched upstream app (app/app.py) with two launcher-side
 features, so nothing in the app folder is modified and update.js
 (git pull) keeps working:
 
-1. YouTube cookies: injects `--cookies <launcher>/cookies.txt` into
-   every yt-dlp call when that file exists. Checked per call, so
-   cookies added/replaced while running take effect immediately.
+1. YouTube cookies: injects cookies into every yt-dlp call, checked
+   per call so changes take effect immediately without a restart.
+   Two sources, in priority order:
+     - COOKIES_FROM_BROWSER env var set: passes yt-dlp's own
+       `--cookies-from-browser <value>` (e.g. "chrome", "firefox",
+       "chrome:Profile 2"), which reads the browser's cookie store
+       directly. No file ever hits disk.
+     - Otherwise, if <launcher>/cookies.txt exists: `--cookies` with
+       that file (populated via the "Add YouTube Cookies" menu item,
+       from a manually exported Netscape-format cookies.txt).
 
 2. Download progress: download commands run through Popen with
    `--newline`, their `[download] NN.N%` lines are parsed live into
@@ -99,7 +106,10 @@ def _run_download_with_progress(cmd, job_id, timeout=None):
 
 def _patched_run(cmd, *args, **kwargs):
     if isinstance(cmd, list) and cmd and cmd[0] == "yt-dlp":
-        if os.path.isfile(COOKIES):
+        browser = os.environ.get("COOKIES_FROM_BROWSER")
+        if browser:
+            cmd = [cmd[0], "--cookies-from-browser", browser] + cmd[1:]
+        elif os.path.isfile(COOKIES):
             cmd = [cmd[0], "--cookies", COOKIES] + cmd[1:]
         job_id = _job_id_from_cmd(cmd)
         if job_id and kwargs.get("capture_output"):
