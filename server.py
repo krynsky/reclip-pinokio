@@ -1,6 +1,6 @@
 """Launcher wrapper for ReClip.
 
-Runs the untouched upstream app (app/app.py) with two launcher-side
+Runs the untouched upstream app (app/app.py) with three launcher-side
 features, so nothing in the app folder is modified and update.js
 (git pull) keeps working:
 
@@ -27,6 +27,13 @@ features, so nothing in the app folder is modified and update.js
    PROGRESS, the /api/status response is extended with a `progress`
    field, and a small script (progress.js) is injected into the web
    UI to render a per-card progress bar.
+
+3. JS challenge solving: every yt-dlp call gets `--remote-components
+   ejs:github`, which fetches yt-dlp's own external JS solver
+   component on demand. Without it, cookie-authenticated requests can
+   fail YouTube's signature/PO-token challenge and silently fall back
+   to only storyboard-image formats being available, with no working
+   video/audio format at all ("Requested format is not available").
 """
 import json
 import os
@@ -123,6 +130,12 @@ def _run_download_with_progress(cmd, job_id, timeout=None):
 
 def _patched_run(cmd, *args, **kwargs):
     if isinstance(cmd, list) and cmd and cmd[0] == "yt-dlp":
+        # Without this, cookie-authenticated requests can fail YouTube's
+        # signature/PO-token challenge and fall back to only images
+        # (storyboard) formats being available -- "Requested format is
+        # not available" with no real fix otherwise. ejs:github fetches
+        # yt-dlp's own JS challenge-solver component on demand.
+        cmd = [cmd[0], "--remote-components", "ejs:github"] + cmd[1:]
         browser = os.environ.get("COOKIES_FROM_BROWSER") or _configured_browser()
         if browser:
             cmd = [cmd[0], "--cookies-from-browser", browser] + cmd[1:]

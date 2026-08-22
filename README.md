@@ -63,6 +63,16 @@ committed) and is only ever passed to your local yt-dlp process.
 If `COOKIES_FROM_BROWSER` is set, it takes priority over `cookies.txt` on every
 yt-dlp call.
 
+### If a download fails with "Requested format is not available" once cookies are added
+
+This launcher passes `--remote-components ejs:github` on every yt-dlp call, which
+fetches yt-dlp's own JS challenge-solver component on demand to handle YouTube's
+signature/PO-token checks. Without it, cookie-authenticated requests can silently
+fall back to only storyboard-image formats being available — no real video/audio
+format at all — and fail with "Requested format is not available". If you still
+hit this after updating, your yt-dlp bundled with this launcher may be too old;
+use **Update** to upgrade it (also upgrades yt-dlp — see `update.js`).
+
 ## API
 
 ReClip exposes a small Flask API. The base URL is whatever **Open Web UI** shows (e.g. `http://127.0.0.1:PORT`). Replace `BASE` below with that URL.
