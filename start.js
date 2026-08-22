@@ -7,8 +7,7 @@ module.exports = {
         venv: "env",
         env: {
           HOST: "127.0.0.1",
-          PORT: "{{port}}",
-          COOKIES_FROM_BROWSER: "{{self.config.browser || ''}}"
+          PORT: "{{port}}"
         },
         path: "app",
         message: [

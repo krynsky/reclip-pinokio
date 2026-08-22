@@ -6,14 +6,21 @@ features, so nothing in the app folder is modified and update.js
 
 1. YouTube cookies: injects cookies into every yt-dlp call, checked
    per call so changes take effect immediately without a restart.
-   Two sources, in priority order:
-     - COOKIES_FROM_BROWSER env var set: passes yt-dlp's own
-       `--cookies-from-browser <value>` (e.g. "chrome", "firefox",
-       "chrome:Profile 2"), which reads the browser's cookie store
-       directly. No file ever hits disk.
+   Three sources, in priority order:
+     - COOKIES_FROM_BROWSER env var, if set.
+     - Otherwise, the "browser" field in <launcher>/config.json, set
+       via the "Set Cookie Browser" menu item (browser.js). Read
+       directly from disk on every call rather than relying on
+       Pinokio's script-level `self` template, which only exposes the
+       currently-running script's own module and does not merge
+       sibling JSON files despite what the Pinokio docs suggest.
      - Otherwise, if <launcher>/cookies.txt exists: `--cookies` with
        that file (populated via the "Add YouTube Cookies" menu item,
        from a manually exported Netscape-format cookies.txt).
+   Either of the first two, when set, passes yt-dlp's own
+   `--cookies-from-browser <value>` (e.g. "chrome", "firefox",
+   "chrome:Profile 2"), reading the browser's cookie store directly;
+   no file hits disk for that path.
 
 2. Download progress: download commands run through Popen with
    `--newline`, their `[download] NN.N%` lines are parsed live into
@@ -21,6 +28,7 @@ features, so nothing in the app folder is modified and update.js
    field, and a small script (progress.js) is injected into the web
    UI to render a per-card progress bar.
 """
+import json
 import os
 import re
 import sys
@@ -31,6 +39,15 @@ import importlib.util
 ROOT = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.join(ROOT, "app")
 COOKIES = os.path.join(ROOT, "cookies.txt")
+CONFIG = os.path.join(ROOT, "config.json")
+
+
+def _configured_browser():
+    try:
+        with open(CONFIG, encoding="utf-8") as f:
+            return json.load(f).get("browser") or ""
+    except (OSError, ValueError):
+        return ""
 
 # job_id -> {"percent": float, "phase": int}
 PROGRESS = {}
@@ -106,7 +123,7 @@ def _run_download_with_progress(cmd, job_id, timeout=None):
 
 def _patched_run(cmd, *args, **kwargs):
     if isinstance(cmd, list) and cmd and cmd[0] == "yt-dlp":
-        browser = os.environ.get("COOKIES_FROM_BROWSER")
+        browser = os.environ.get("COOKIES_FROM_BROWSER") or _configured_browser()
         if browser:
             cmd = [cmd[0], "--cookies-from-browser", browser] + cmd[1:]
         elif os.path.isfile(COOKIES):
