@@ -29,13 +29,14 @@ YouTube cookies to yt-dlp two ways:
 
 In the launcher sidebar, click **Set Cookie Browser** and enter a value yt-dlp's
 `--cookies-from-browser` accepts — e.g. `chrome`, `edge`, `firefox`, `brave`, or
-`chrome:Profile 2` to pick a specific profile. Then **Start** (or restart) the
-app. yt-dlp reads the cookie store directly on each call; no `cookies.txt` file
-is ever written to disk, and no browser extension is needed.
+`chrome:Profile 2` to pick a specific profile. yt-dlp reads the cookie store
+directly on each call; no `cookies.txt` file is ever written to disk, and no
+browser extension is needed.
 
 The button label shows the currently configured browser (or "Set Cookie Browser"
 if none is set). Click it again any time to change it, or clear the field and
-save to disable — a restart is needed either way for the change to take effect.
+save to disable — like Option B below, this applies immediately, even while the
+app is running. No restart needed.
 
 > **Known issue on Windows with Chrome:** recent Chrome versions (127+) use
 > "App-Bound Encryption" for cookie storage, and yt-dlp can fail to decrypt
