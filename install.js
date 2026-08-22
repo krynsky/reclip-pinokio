@@ -25,14 +25,6 @@ module.exports = {
           "uv pip install flask yt-dlp"
         ]
       }
-    },
-    {
-      method: "self.set",
-      params: {
-        "config.json": {
-          browser: ""
-        }
-      }
     }
   ]
 }
